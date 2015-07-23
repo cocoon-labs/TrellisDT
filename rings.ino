@@ -46,34 +46,12 @@ void ringsLoop() {
   trellis.writeDisplay();
 }
 
-void shiftRingsOut() {
-  
-}
-
-void shiftRingsIn() {
-  
-}
-
 void setRing(uint8_t r) {
   r = r % 4;
   setRowPart(3 - r, 3 - r, 4 + r);
   setRowPart(4 + r, 3 - r, 4 + r);
   setColPart(3 - r, 3 - r, 4 + r);
   setColPart(4 + r, 3 - r, 4 + r);
-}
-
-void setInnerRing() {
-  setXY(3,3);
-  setXY(3,4);
-  setXY(4,3);
-  setXY(4,4);
-}
-
-void setOuterRing() {
-  setRow(0);
-  setRow(7);
-  setCol(0);
-  setCol(7);
 }
 
 void ringsRandomize() {

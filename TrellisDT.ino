@@ -13,6 +13,11 @@
 #define GOL 0
 #define RINGS 1
 
+// serial tags
+#define SWITCHMODE 0
+#define COLORPRESET 1
+#define MODEPRESET 2
+
 // Connect Trellis Vin to 5V and Ground to ground.
 // Connect the INT wire to pin #A2 (can change later!)
 #define INTPIN A2
@@ -27,15 +32,20 @@ Adafruit_Trellis matrix3 = Adafruit_Trellis();
 Adafruit_TrellisSet trellis =  Adafruit_TrellisSet(&matrix0, &matrix1, &matrix2, &matrix3);
 
 uint8_t mode = SCREENSAVER;
+
 uint8_t ssMode = RINGS;
 uint8_t ssModeCount = 2;
 uint8_t ssDelay = 100; // 100ms delay is minimum
+
+uint8_t nColorPresets = 0;
+uint8_t nModePresets = 0;
+uint8_t nSpecOptions = 0;
+
 uint8_t randFactor = 100;
 
 
 void setup() {
   Serial.begin(9600);
-  Serial.println("Trellis Demo");
 
   // INT pin requires a pullup
   pinMode(INTPIN, INPUT);
@@ -45,24 +55,40 @@ void setup() {
   // begin() with the addresses of each panel in order
   trellis.begin(0x70, 0x71, 0x72, 0x73);  // or four!
 
-  //drawRows();
   wipe();
-  //golSetup();
+  setupMode();
 }
 
+void setupMode() {
+  switch(mode) {
+    case SCREENSAVER:
+      wipe();
+      break;
+    case PRESETS:
+      presetsSetup();
+      break;
+    case SPECS:
+      specsSetup();
+      break;
+    case ARCADE:
+      //arcadeSetup();
+      break;
+  }
+}
 
 void loop() {
   delay(30); // 30ms delay is required, dont remove me!
+  listenForPi();
   
   switch(mode) {
     case SCREENSAVER:
       ssLoop();
       break;
     case PRESETS:
-      
+      presetsLoop();
       break;
     case SPECS:
-      
+      specsLoop();
       break;
     case ARCADE:
       
@@ -150,6 +176,10 @@ void setXY(uint8_t x, uint8_t y) {
 
 void clrXY(uint8_t x, uint8_t y) {
   trellis.clrLED(morphXY(x, y));
+}
+
+boolean justPressedXY(uint8_t x, uint8_t y) {
+  return trellis.justPressed(morphXY(x, y));
 }
 
 void toggle(uint8_t placeVal) {
@@ -242,5 +272,65 @@ boolean toggleModeLoop() {
     }
     // tell the trellis to set the LEDs we requested
     trellis.writeDisplay();
+  }
+}
+
+void bitAnd() {
+  if (Serial.available()) {
+    byte data[8];
+    for (int i = 0; i < 8; i++) {
+      data[i] = Serial.read();
+    }
+    for (uint8_t i=0; i<numKeys; i++) {
+      if ((data[i/8] & (1 << ((i%8)-1))) != 0)
+	trellis.setLED(i);
+    }
+  }
+}
+
+void bitXAnd() {
+  if (Serial.available() >= 8) {
+    byte data[8];
+    readNBytes(data, 8);
+    for (uint8_t i=0; i<numKeys; i++) {
+      if ((data[i/8] & (1 << ((i%8)))) != 0)
+	trellis.setLED(i);
+      else
+        trellis.clrLED(i);
+    }
+  }
+}
+
+void readNBytes(byte *data, uint8_t n) {
+  if (Serial.available() >= n) {
+    for (int i = n - 1; i >= 0; i--) {
+      *(data + i) = Serial.read();
+    }
+  }
+}
+
+void listenForPi() {
+  if (Serial.available() >= 2) {
+    parseSerial();
+  }
+}
+
+void parseSerial() {
+  byte serialTag = Serial.read();
+  switch(serialTag) {
+    case SWITCHMODE:
+      mode = Serial.read();
+      if (mode == PRESETS) {
+        nColorPresets = Serial.read();
+        nModePresets = Serial.read();
+      } else if (mode == SPECS) {
+        nSpecOptions = Serial.read();
+      }
+      setupMode();
+      break;
+    default:
+      Serial.print("Unknown serial tag: ");
+      Serial.println(serialTag);
+      break;
   }
 }
