@@ -5,8 +5,8 @@
 
 // mode options
 #define SCREENSAVER 0
-#define PRESETS 1
-#define SPECS 2
+#define MODES 1
+#define COLORS 2
 #define ARCADE 3
 
 // screensaver mode options
@@ -15,8 +15,6 @@
 
 // serial tags
 #define SWITCHMODE 0
-#define COLORPRESET 1
-#define MODEPRESET 2
 
 // Connect Trellis Vin to 5V and Ground to ground.
 // Connect the INT wire to pin #A2 (can change later!)
@@ -39,7 +37,6 @@ uint8_t ssDelay = 100; // 100ms delay is minimum
 
 uint8_t nColorPresets = 0;
 uint8_t nModePresets = 0;
-uint8_t nSpecOptions = 0;
 
 uint8_t randFactor = 100;
 
@@ -53,7 +50,7 @@ void setup() {
   randomSeed(analogRead(0));
   
   // begin() with the addresses of each panel in order
-  trellis.begin(0x70, 0x71, 0x72, 0x73);  // or four!
+  trellis.begin(0x70, 0x71, 0x72, 0x73);
 
   wipe();
   setupMode();
@@ -64,11 +61,11 @@ void setupMode() {
     case SCREENSAVER:
       wipe();
       break;
-    case PRESETS:
-      presetsSetup();
+    case MODES:
+      modesSetup();
       break;
-    case SPECS:
-      specsSetup();
+    case COLORS:
+      colorsSetup();
       break;
     case ARCADE:
       //arcadeSetup();
@@ -84,11 +81,11 @@ void loop() {
     case SCREENSAVER:
       ssLoop();
       break;
-    case PRESETS:
-      presetsLoop();
+    case MODES:
+      modesLoop();
       break;
-    case SPECS:
-      specsLoop();
+    case COLORS:
+      colorsLoop();
       break;
     case ARCADE:
       
@@ -320,11 +317,10 @@ void parseSerial() {
   switch(serialTag) {
     case SWITCHMODE:
       mode = Serial.read();
-      if (mode == PRESETS) {
-        nColorPresets = Serial.read();
+      if (mode == MODES) {
         nModePresets = Serial.read();
-      } else if (mode == SPECS) {
-        nSpecOptions = Serial.read();
+      } else if (mode == COLORS) {
+        nColorPresets = Serial.read();
       }
       setupMode();
       break;
