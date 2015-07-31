@@ -8,6 +8,7 @@
 #define MODES 1
 #define COLORS 2
 #define ARCADE 3
+#define SLEEP 4
 
 // screensaver mode options
 #define GOL 0
@@ -69,6 +70,10 @@ void setupMode() {
       break;
     case ARCADE:
       //arcadeSetup();
+      wipe();
+      break;
+    case SLEEP:
+      wipe();
       break;
   }
 }
@@ -88,7 +93,10 @@ void loop() {
       colorsLoop();
       break;
     case ARCADE:
-      
+      ssLoop();
+      break;
+    case SLEEP:
+      // do nothing
       break;
   }
 }
